@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Round 1 — Project Merlion</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#FFF1E5;
+  --sheet:#FFFFFF;
+  --ink:#12262E;
+  --ink-soft:#5B6E75;
+  --rule:#E0CDBD;
+  --rule-hard:#C9B3A1;
+  --flag:#C2382E;
+  --flag-wash:#FBE4E0;
+  --sel:#0A5C7A;
+  --sel-wash:#E3F0F5;
+  --good:#1F6F5C;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:'Archivo',system-ui,sans-serif;
+  font-size:15px;
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1280px;margin:0 auto;padding:0 20px 80px}
+
+/* ---------- masthead ---------- */
+header{
+  border-bottom:2px solid var(--ink);
+  padding:22px 0 14px;
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  gap:24px;
+  flex-wrap:wrap;
+}
+.title h1{
+  font-size:26px;
+  font-weight:700;
+  letter-spacing:-.02em;
+  margin:0;
+}
+.title p{
+  margin:2px 0 0;
+  color:var(--ink-soft);
+  font-size:14px;
+}
+.meters{display:flex;gap:28px;align-items:baseline}
+.meter{text-align:right}
+.meter .n{
+  font-family:'JetBrains Mono',monospace;
+  font-size:24px;
+  font-weight:500;
+  font-variant-numeric:tabular-nums;
+  display:block;
+  line-height:1.1;
+}
+.meter .k{font-size:12px;color:var(--ink-soft)}
+.meter.flagged .n{color:var(--flag)}
+
+/* ---------- brief ---------- */
+.brief{
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr;
+  gap:0;
+  border-bottom:1px solid var(--rule);
+  margin-bottom:18px;
+}
+.brief div{padding:14px 18px 14px 0}
+.brief div + div{padding-left:18px;border-left:1px solid var(--rule)}
+.brief h3{margin:0 0 4px;font-size:14px;font-weight:600}
+.brief p{margin:0;font-size:13.5px;color:var(--ink-soft);line-height:1.45}
+
+/* ---------- layout ---------- */
+.cols{display:grid;grid-template-columns:1fr 296px;gap:24px;align-items:start}
+
+/* ---------- formula bar ---------- */
+.fbar{
+  display:flex;
+  align-items:stretch;
+  border:1px solid var(--rule-hard);
+  background:var(--sheet);
+  margin-bottom:-1px;
+}
+.fbar .ref{
+  font-family:'JetBrains Mono',monospace;
+  font-weight:700;
+  padding:9px 14px;
+  min-width:64px;
+  border-right:1px solid var(--rule-hard);
+  color:var(--sel);
+}
+.fbar .fx{
+  font-family:'JetBrains Mono',monospace;
+  padding:9px 14px;
+  flex:1;
+  overflow-x:auto;
+  white-space:nowrap;
+  color:var(--ink);
+}
+.fbar .fx.empty{color:#9DAAB0}
+
+/* ---------- grid ---------- */
+.sheetwrap{border:1px solid var(--rule-hard);background:var(--sheet);overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:820px}
+th,td{
+  font-family:'JetBrains Mono',monospace;
+  font-size:13px;
+  font-variant-numeric:tabular-nums;
+  border-right:1px solid #EDE4DC;
+  border-bottom:1px solid #EDE4DC;
+  padding:0;
+  height:27px;
+}
+thead th{
+  background:#F6EFE9;
+  color:var(--ink-soft);
+  font-weight:500;
+  font-size:11.5px;
+  text-align:center;
+  border-bottom:1px solid var(--rule-hard);
+  position:sticky;top:0;z-index:2;
+}
+.rn{
+  background:#F6EFE9;
+  color:#9DAAB0;
+  font-size:11px;
+  text-align:center;
+  width:34px;
+  border-right:1px solid var(--rule-hard);
+  user-select:none;
+}
+td.lbl{
+  font-family:'Archivo',sans-serif;
+  font-size:13.5px;
+  text-align:left;
+  padding:0 10px;
+  white-space:nowrap;
+  min-width:190px;
+}
+td.val{text-align:right;padding:0 10px;cursor:pointer;position:relative;min-width:92px}
+td.val:hover{background:#F8FBFC}
+td.val.sel{outline:2px solid var(--sel);outline-offset:-2px;background:var(--sel-wash)}
+td.val.flg{background:var(--flag-wash);color:var(--flag);font-weight:500}
+td.val.flg::after{
+  content:"";position:absolute;top:0;right:0;
+  border-width:0 7px 7px 0;border-style:solid;
+  border-color:transparent var(--flag) transparent transparent;
+}
+td.val.flg.sel{background:#F6DCD7}
+tr.head td{font-weight:700;background:#FAF6F2}
+tr.sub td.lbl{padding-left:22px;color:var(--ink-soft)}
+tr.tot td{border-top:1px solid var(--rule-hard);font-weight:700}
+tr.spacer td{height:9px;background:#FCFAF8;border-bottom:1px solid #EDE4DC}
+.pct{color:var(--ink-soft)}
+
+/* ---------- rail ---------- */
+.rail{position:sticky;top:14px}
+.panel{border:1px solid var(--rule-hard);background:var(--sheet);margin-bottom:14px}
+.panel h2{
+  font-size:13px;font-weight:600;margin:0;
+  padding:9px 14px;border-bottom:1px solid var(--rule);
+  background:#FAF6F2;
+}
+.panel .body{padding:12px 14px}
+.empty-note{color:var(--ink-soft);font-size:13px;margin:0;line-height:1.45}
+ul.flags{list-style:none;margin:0;padding:0}
+ul.flags li{
+  display:flex;justify-content:space-between;align-items:center;
+  font-family:'JetBrains Mono',monospace;font-size:13px;
+  padding:6px 14px;border-bottom:1px solid #F0E7E0;
+}
+ul.flags li:last-child{border-bottom:0}
+ul.flags button{
+  border:0;background:none;color:var(--ink-soft);cursor:pointer;
+  font-size:16px;line-height:1;padding:0 2px;
+}
+ul.flags button:hover{color:var(--flag)}
+
+button.act{
+  font-family:'Archivo',sans-serif;font-size:14px;font-weight:600;
+  width:100%;padding:11px;cursor:pointer;border:1px solid var(--ink);
+  background:var(--ink);color:var(--paper);
+}
+button.act:hover{background:#000}
+button.act:disabled{background:#B8C2C6;border-color:#B8C2C6;cursor:not-allowed}
+button.ghost{
+  background:none;color:var(--ink);border:1px solid var(--rule-hard);
+  margin-top:8px;font-weight:500;
+}
+button.ghost:hover{background:#F6EFE9}
+input.name{
+  width:100%;padding:9px 11px;border:1px solid var(--rule-hard);
+  font-family:'JetBrains Mono',monospace;font-size:13px;
+  margin-bottom:9px;background:var(--sheet);color:var(--ink);
+}
+input.name:focus,button:focus-visible,td.val:focus-visible{outline:2px solid var(--sel);outline-offset:1px}
+.hint{font-size:12.5px;color:var(--ink-soft);margin:10px 0 0;line-height:1.45}
+.msg{font-size:13px;margin:10px 0 0;padding:9px 11px;line-height:1.45}
+.msg.err{background:var(--flag-wash);color:var(--flag)}
+.msg.ok{background:#E4F0EC;color:var(--good)}
+
+/* ---------- result ---------- */
+.result{display:none}
+.scoreline{display:flex;gap:22px;align-items:baseline;padding:14px}
+.scoreline .big{
+  font-family:'JetBrains Mono',monospace;font-size:40px;font-weight:700;
+  line-height:1;color:var(--good);
+}
+.scoreline .sub{font-size:13px;color:var(--ink-soft);line-height:1.4}
+table.lb{width:100%;min-width:0;border:0}
+table.lb td{border:0;border-bottom:1px solid #F0E7E0;padding:6px 14px;height:auto}
+table.lb td.r{width:26px;color:var(--ink-soft)}
+table.lb td.s{text-align:right;font-weight:700}
+table.lb tr.me td{background:var(--sel-wash)}
+
+@media(max-width:920px){
+  .cols{grid-template-columns:1fr}
+  .rail{position:static}
+  .brief{grid-template-columns:1fr}
+  .brief div + div{padding-left:0;border-left:0;border-top:1px solid var(--rule)}
+}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="title">
+    <h1>Project Merlion — unlevered DCF</h1>
+    <p>Round 1 &nbsp;·&nbsp; six errors planted &nbsp;·&nbsp; 90 minutes</p>
+  </div>
+  <div class="meters">
+    <div class="meter"><span class="n" id="clock">00:00</span><span class="k">elapsed</span></div>
+    <div class="meter flagged"><span class="n" id="fcount">0</span><span class="k">flagged</span></div>
+  </div>
+</header>
+
+<div class="brief">
+  <div>
+    <h3>What's wrong with this model</h3>
+    <p>Six formulas are broken. Some produce numbers that look entirely reasonable. Nothing is broken in a way that shows up as an error value.</p>
+  </div>
+  <div>
+    <h3>How to flag</h3>
+    <p>Click a cell to read its formula. Press F or use the flag button to mark it. If a broken formula runs across a row, flag any one cell in it.</p>
+  </div>
+  <div>
+    <h3>How it scores</h3>
+    <p>One point per error found, one point lost per clean cell you flag. Time breaks ties. Guessing widely will cost you more than it earns.</p>
+  </div>
+</div>
+
+<div class="cols">
+  <div>
+    <div class="fbar">
+      <div class="ref" id="ref">—</div>
+      <div class="fx empty" id="fx">Select a cell to see its formula</div>
+    </div>
+    <div class="sheetwrap"><table id="sheet"></table></div>
+  </div>
+
+  <div class="rail">
+    <div class="panel" id="flagpanel">
+      <h2>Flagged cells</h2>
+      <div class="body" id="flagempty"><p class="empty-note">Nothing flagged yet. Select a cell and press F.</p></div>
+      <ul class="flags" id="flaglist"></ul>
+    </div>
+
+    <div class="panel" id="submitpanel">
+      <h2>Submit</h2>
+      <div class="body">
+        <input class="name" id="handle" placeholder="your handle" maxlength="24" autocomplete="off">
+        <button class="act" id="submitBtn">Submit and score</button>
+        <button class="act ghost" id="flagBtn">Flag selected cell</button>
+        <p class="hint">You get one submission. Scoring happens on the server, so the answer key isn't in this page.</p>
+        <div id="msg"></div>
+      </div>
+    </div>
+
+    <div class="panel result" id="resultpanel">
+      <h2>Your result</h2>
+      <div class="scoreline">
+        <span class="big" id="bigscore">0</span>
+        <span class="sub" id="scoresub"></span>
+      </div>
+    </div>
+
+    <div class="panel result" id="lbpanel">
+      <h2>Leaderboard</h2>
+      <table class="lb" id="lb"></table>
+    </div>
+  </div>
+</div>
+</div>
+
+<script>
+/* ============================================================
+   SET THIS after you deploy the Apps Script backend (Code.gs).
+   Paste the /exec web app URL between the quotes.
+   ============================================================ */
+const APPS_SCRIPT_URL = "";
+
+const COLS = ["A","B","C","D","E","F","G"];
+const HEAD = ["","FY24A","FY25E","FY26E","FY27E","FY28E","FY29E"];
+
+// v = displayed value, f = formula shown in the formula bar
+const n = (v,f)=>({v,f});
+const ROWS = [
+  {r:1, type:"head", label:"Unlevered free cash flow", cells:{}},
+  {r:2, type:"spacer"},
+  {r:3, type:"colhead"},
+  {r:4, label:"Revenue", cells:{B:n("850.0","850.0"),C:n("952.0","=B4*(1+$B$25)"),D:n("1,066.2","=C4*(1+$B$25)"),E:n("1,150.0","1150.0"),F:n("1,288.0","=E4*(1+$B$25)"),G:n("1,442.6","=F4*(1+$B$25)")}},
+  {r:5, type:"sub", label:"Growth", pct:true, cells:{C:n("12.0%","=C4/B4-1"),D:n("12.0%","=D4/C4-1"),E:n("7.9%","=E4/D4-1"),F:n("12.0%","=F4/E4-1"),G:n("12.0%","=G4/F4-1")}},
+  {r:6, type:"sub", label:"Cost of sales", cells:{C:n("399.8","=C4*$B$26"),D:n("447.8","=D4*$B$26"),E:n("483.0","=E4*$B$26"),F:n("540.9","=F4*$B$26"),G:n("605.9","=G4*$B$26")}},
+  {r:7, label:"Gross profit", cells:{C:n("552.2","=C4-C6"),D:n("618.4","=D4-D6"),E:n("667.0","=E4-E6"),F:n("747.1","=F4-F6"),G:n("836.7","=G4-G6")}},
+  {r:8, type:"sub", label:"Operating expenses", cells:{C:n("295.1","=C4*$B$27"),D:n("330.5","=D4*$B$27"),E:n("356.5","=E4*$B$27"),F:n("399.3","=F4*$B$27"),G:n("447.2","=G4*$B$27")}},
+  {r:9, label:"EBITDA", cells:{C:n("257.0","=C7-C8"),D:n("287.9","=D7-D8"),E:n("310.5","=E7-E8"),F:n("347.8","=F7-F8"),G:n("389.5","=G7-G8")}},
+  {r:10,type:"sub", label:"Depreciation & amortisation", cells:{C:n("38.1","=C4*$B$28"),D:n("42.6","=D4*$B$28"),E:n("46.0","=E4*$B$28"),F:n("51.5","=F4*$B$28"),G:n("57.7","=G4*$B$28")}},
+  {r:11,label:"EBIT", cells:{C:n("219.0","=C9-C10"),D:n("245.2","=D9-D10"),E:n("264.5","=E9-E10"),F:n("296.2","=F9-F10"),G:n("331.8","=G9-G10")}},
+  {r:12,type:"sub", label:"Taxes", cells:{C:n("37.2","=C11*$B$29"),D:n("41.7","=D11*$B$29"),E:n("45.0","=E11*$B$29"),F:n("14.8","=F11*$B$30"),G:n("56.4","=G11*$B$29")}},
+  {r:13,type:"tot", label:"NOPAT", cells:{C:n("181.7","=C11-C12"),D:n("203.5","=D11-D12"),E:n("219.5","=E11-E12"),F:n("281.4","=F11-F12"),G:n("275.4","=G11-G12")}},
+  {r:14,type:"spacer"},
+  {r:15,type:"sub", label:"Add: D&A", cells:{C:n("38.1","=C10"),D:n("42.6","=D10"),E:n("46.0","=E10"),F:n("51.5","=F10"),G:n("57.7","=G10")}},
+  {r:16,type:"sub", label:"Less: capital expenditure", cells:{C:n("47.6","=C4*$B$30"),D:n("53.3","=D4*$B$30"),E:n("57.5","=E4*$B$30"),F:n("64.4","=F4*$B$30"),G:n("72.1","=G4*$B$30")}},
+  {r:17,type:"sub", label:"Less: change in working capital", cells:{C:n("15.3","=(C4-B4)*$B$31"),D:n("17.1","=(D4-C4)*$B$31"),E:n("12.6","=(E4-D4)*$B$31"),F:n("20.7","=(F4-E4)*$B$31"),G:n("23.2","=(G4-F4)*$B$31")}},
+  {r:18,type:"tot", label:"Unlevered free cash flow", cells:{C:n("187.5","=C13+C15-C16+C17"),D:n("209.9","=D13+D15-D16+D17"),E:n("220.6","=E13+E15-E16+E17"),F:n("289.2","=F13+F15-F16+F17"),G:n("284.2","=G13+G15-G16+G17")}},
+  {r:19,type:"spacer"},
+  {r:20,type:"sub", label:"Discount period", cells:{C:n("0.0","0.0"),D:n("1.0","=C20+1"),E:n("2.0","=D20+1"),F:n("3.0","=E20+1"),G:n("4.0","=F20+1")}},
+  {r:21,type:"sub", label:"Discount factor", cells:{C:n("1.000","=1/(1+$B$32)^C20"),D:n("0.913","=1/(1+$B$32)^D20"),E:n("0.834","=1/(1+$B$32)^E20"),F:n("0.762","=1/(1+$B$32)^F20"),G:n("0.696","=1/(1+$B$32)^G20")}},
+  {r:22,type:"tot", label:"Present value of FCF", cells:{C:n("187.5","=C18*C21"),D:n("191.6","=D18*D21"),E:n("184.0","=E18*E21"),F:n("220.4","=F18*F21"),G:n("197.8","=G18*G21")}},
+  {r:23,type:"spacer"},
+  {r:24,type:"head", label:"Assumptions", cells:{}},
+  {r:25,type:"sub", label:"Revenue growth", cells:{B:n("12.0%","12.0%")}},
+  {r:26,type:"sub", label:"Cost of sales, % of revenue", cells:{B:n("42.0%","42.0%")}},
+  {r:27,type:"sub", label:"Operating expenses, % of revenue", cells:{B:n("31.0%","31.0%")}},
+  {r:28,type:"sub", label:"D&A, % of revenue", cells:{B:n("4.0%","4.0%")}},
+  {r:29,type:"sub", label:"Tax rate", cells:{B:n("17.0%","17.0%")}},
+  {r:30,type:"sub", label:"Capex, % of revenue", cells:{B:n("5.0%","5.0%")}},
+  {r:31,type:"sub", label:"Working capital, % of revenue change", cells:{B:n("15.0%","15.0%")}},
+  {r:32,type:"sub", label:"Discount rate", cells:{B:n("9.5%","9.5%")}},
+  {r:33,type:"sub", label:"Terminal growth", cells:{B:n("2.5%","2.5%")}},
+  {r:34,type:"spacer"},
+  {r:35,type:"head", label:"Valuation", cells:{}},
+  {r:36,type:"sub", label:"Sum of present values", cells:{C:n("981.3","=SUM(C22:G22)")}},
+  {r:37,type:"sub", label:"Terminal value", cells:{C:n("4,060.0","=G18/($B$32-$B$33)")}},
+  {r:38,type:"sub", label:"Present value of terminal value", cells:{C:n("2,825.8","=C37*G21")}},
+  {r:39,type:"tot", label:"Enterprise value", cells:{C:n("3,807.1","=C36+C38")}},
+  {r:40,type:"sub", label:"Net debt", cells:{C:n("180.0","180.0")}},
+  {r:41,type:"tot", label:"Equity value", cells:{C:n("3,987.1","=C39+C40")}},
+  {r:42,type:"sub", label:"Shares outstanding", cells:{C:n("95.0","95.0")}},
+  {r:43,type:"tot", label:"Value per share", cells:{C:n("41.97","=C41/C42")}}
+];
+
+let selected=null, flags=new Set(), submitted=false;
+const t0=Date.now();
+const $=id=>document.getElementById(id);
+
+function build(){
+  const t=$("sheet");
+  const thead=document.createElement("thead");
+  const hr=document.createElement("tr");
+  hr.appendChild(Object.assign(document.createElement("th"),{className:"rn"}));
+  COLS.forEach((c,i)=>{
+    const th=document.createElement("th");
+    th.textContent = i===0 ? "A" : c+"  ·  "+HEAD[i];
+    hr.appendChild(th);
+  });
+  thead.appendChild(hr); t.appendChild(thead);
+
+  const tb=document.createElement("tbody");
+  ROWS.forEach(row=>{
+    const tr=document.createElement("tr");
+    if(row.type) tr.className=row.type;
+    const rn=document.createElement("td"); rn.className="rn"; rn.textContent=row.r; tr.appendChild(rn);
+
+    const lbl=document.createElement("td"); lbl.className="lbl";
+    lbl.textContent=row.label||""; tr.appendChild(lbl);
+
+    if(row.type==="spacer"){ lbl.colSpan=6; tb.appendChild(tr); return; }
+
+    COLS.slice(1).forEach(c=>{
+      const td=document.createElement("td");
+      const cell=row.cells&&row.cells[c];
+      if(cell){
+        td.className="val"+(row.pct?" pct":"");
+        td.textContent=cell.v;
+        td.dataset.id=c+row.r;
+        td.dataset.fx=cell.f;
+        td.tabIndex=0;
+        td.addEventListener("click",()=>select(td));
+        td.addEventListener("keydown",e=>{
+          if(e.key==="Enter"||e.key===" "){e.preventDefault();select(td);}
+        });
+      }
+      tr.appendChild(td);
+    });
+    tb.appendChild(tr);
+  });
+  t.appendChild(tb);
+}
+
+function select(td){
+  document.querySelectorAll("td.sel").forEach(e=>e.classList.remove("sel"));
+  td.classList.add("sel");
+  selected=td.dataset.id;
+  $("ref").textContent=selected;
+  const fx=$("fx");
+  fx.textContent=td.dataset.fx;
+  fx.classList.remove("empty");
+}
+
+function toggleFlag(){
+  if(!selected||submitted) return;
+  const td=document.querySelector(`td[data-id="${selected}"]`);
+  if(flags.has(selected)){ flags.delete(selected); td.classList.remove("flg"); }
+  else { flags.add(selected); td.classList.add("flg"); }
+  renderFlags();
+}
+
+function renderFlags(){
+  const list=$("flaglist"), empty=$("flagempty");
+  list.innerHTML="";
+  $("fcount").textContent=flags.size;
+  empty.style.display = flags.size ? "none" : "block";
+  [...flags].sort().forEach(id=>{
+    const li=document.createElement("li");
+    li.textContent=id;
+    const b=document.createElement("button");
+    b.textContent="×"; b.title="Remove flag on "+id;
+    b.onclick=()=>{
+      flags.delete(id);
+      document.querySelector(`td[data-id="${id}"]`).classList.remove("flg");
+      renderFlags();
+    };
+    li.appendChild(b); list.appendChild(li);
+  });
+}
+
+document.addEventListener("keydown",e=>{
+  if(e.target.tagName==="INPUT") return;
+  if(e.key==="f"||e.key==="F"){ e.preventDefault(); toggleFlag(); }
+});
+$("flagBtn").onclick=toggleFlag;
+
+setInterval(()=>{
+  if(submitted) return;
+  const s=Math.floor((Date.now()-t0)/1000);
+  $("clock").textContent=String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0");
+},1000);
+
+function say(txt,kind){ $("msg").innerHTML=`<div class="msg ${kind}">${txt}</div>`; }
+
+$("submitBtn").onclick=async()=>{
+  const handle=$("handle").value.trim();
+  if(!handle){ say("Enter a handle before submitting.","err"); return; }
+  if(!flags.size){ say("Flag at least one cell before submitting.","err"); return; }
+  if(!APPS_SCRIPT_URL){
+    say("Backend not connected. Paste your Apps Script URL into APPS_SCRIPT_URL in index.html.","err");
+    return;
+  }
+  $("submitBtn").disabled=true;
+  $("submitBtn").textContent="Scoring…";
+  const elapsed=Math.floor((Date.now()-t0)/1000);
+  try{
+    const res=await fetch(APPS_SCRIPT_URL,{
+      method:"POST",
+      headers:{"Content-Type":"text/plain;charset=utf-8"},
+      body:JSON.stringify({round:"R1", handle, flags:[...flags], elapsed})
+    });
+    const data=await res.json();
+    if(!data.ok) throw new Error(data.error||"Server rejected the submission");
+    showResult(data,handle,elapsed);
+  }catch(err){
+    say("Submission failed: "+err.message+". Check the Apps Script URL and that the web app is set to allow anyone.","err");
+    $("submitBtn").disabled=false;
+    $("submitBtn").textContent="Submit and score";
+  }
+};
+
+function showResult(d,handle,elapsed){
+  submitted=true;
+  $("submitpanel").style.display="none";
+  $("resultpanel").style.display="block";
+  $("bigscore").textContent=d.score;
+  const mins=Math.floor(elapsed/60);
+  $("scoresub").innerHTML =
+    `${d.found} of ${d.total} errors found<br>${d.falsePositives} clean cells flagged<br>${mins} min ${elapsed%60}s`;
+  document.querySelectorAll("td.val").forEach(td=>{ td.style.cursor="default"; });
+  if(d.leaderboard&&d.leaderboard.length){
+    $("lbpanel").style.display="block";
+    const t=$("lb"); t.innerHTML="";
+    d.leaderboard.forEach((row,i)=>{
+      const tr=document.createElement("tr");
+      if(row.handle===handle) tr.className="me";
+      tr.innerHTML=`<td class="r">${i+1}</td><td>${row.handle}</td><td class="s">${row.score}</td>`;
+      t.appendChild(tr);
+    });
+  }
+}
+
+build();
+renderFlags();
+</script>
+</body>
+</html>
